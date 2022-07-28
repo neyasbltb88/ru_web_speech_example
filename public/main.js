@@ -129,6 +129,7 @@ const grammar =
   ' ;';
 
 const recognition = new SpeechRecognition();
+window.recognition = recognition;
 const speechRecognitionList = new SpeechGrammarList();
 speechRecognitionList.addFromString(grammar, 1);
 recognition.grammars = speechRecognitionList;
@@ -137,12 +138,20 @@ recognition.interimResults = false;
 recognition.maxAlternatives = 1;
 
 const microphoneIcon = document.querySelector('.microphone__image');
+const microphoneStop = document.querySelector('.microphone-stop');
 const microphoneWrapper = document.querySelector('.microphone-wrapper');
 const audioRecordAnimation = document.querySelector('.audio-record-animation');
 const speechRecognitionSection = document.querySelector(
   '.speech-recognition-section'
 );
 const recognitionTextResult = document.querySelector('.recognition-result');
+
+let continuousRecognition = true;
+
+microphoneStop.addEventListener('click', () => {
+  continuousRecognition = !continuousRecognition
+  recognition.stop();
+});
 
 function getColor(speechResult) {
   for (let index = 0; index < colorsList.length; index += 1) {
@@ -155,35 +164,57 @@ function getColor(speechResult) {
 }
 
 microphoneIcon.onclick = function() {
+  continuousRecognition = true;
   recognition.start();
-  console.log('Ready to receive a color command.');
+  // console.log('Ready to receive a color command.');
 };
 
 recognition.onaudiostart = function() {
+  console.log('Ready to receive a color command.');
   microphoneWrapper.style.visibility = 'hidden';
   audioRecordAnimation.style.visibility = 'visible';
 };
 
 recognition.onresult = function(event) {
+  console.log('onresult');
+  const res = event.results[0][0].transcript;
+  console.log(res);
   const last = event.results.length - 1;
   const colors = getColor(event.results[last][0].transcript);
 
-  recognitionTextResult.textContent = 'Результат: ' + colors[0];
-  speechRecognitionSection.style.backgroundColor = colors[1];
-  console.log('Confidence: ' + event.results[0][0].confidence);
+  // recognitionTextResult.textContent = recognitionTextResult.textContent + res + "\n\n";
+
+  const li = document.createElement('li');
+  li.textContent = res;
+  recognitionTextResult.appendChild(li);
+
+  // recognitionTextResult.textContent = 'Результат: ' + colors[0];
+  // speechRecognitionSection.style.backgroundColor = colors[1];
+  // console.log('Confidence: ' + event.results[0][0].confidence);
+
+  // recognition.start();
 };
 
 recognition.onspeechend = function() {
+  console.log('onspeechend');
   recognition.stop();
   microphoneWrapper.style.visibility = 'visible';
   audioRecordAnimation.style.visibility = 'hidden';
 };
 
+recognition.onend = function() {
+  console.log('onend');
+
+  if(continuousRecognition) {
+    recognition.start();
+  }
+}
+
 recognition.onnomatch = function(event) {
-  alert("I didn't recognise that color.");
+  // alert("I didn't recognise that color.");
 };
 
 recognition.onerror = function(event) {
-  alert(`Error occurred in recognition: ${event.error}`);
+  // alert(`Error occurred in recognition: ${event.error}`);
 };
 // end of speech recognition

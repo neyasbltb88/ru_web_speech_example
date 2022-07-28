@@ -85,6 +85,7 @@ hr {
 
 .audio-record-animation {
   position: relative;
+  text-align: center;
 }
 
 .audio-record-animation span {
